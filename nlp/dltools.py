@@ -559,7 +559,7 @@ def read_time_machine():
     """Load the time machine dataset into a list of text lines."""
     # with open(dltools.download('time_machine'), 'r') as f:
     # 从云上下载文件, 改成从本地读取
-    with open('./article.txt', 'r') as f:
+    with open('./nlp/article.txt', 'r') as f:
         lines = f.readlines()
     return [re.sub('[^A-Za-z]+', ' ', line).strip().lower() for line in lines]
 
@@ -601,6 +601,7 @@ class Vocab:
         return len(self.idx_to_token)
 
     def __getitem__(self, tokens):
+        """可以使用key的方式取值"""
         if not isinstance(tokens, (list, tuple)):
             return self.token_to_idx.get(tokens, self.unk)
         return [self.__getitem__(token) for token in tokens]

@@ -9,7 +9,15 @@ AI人工智能学习
 年轻就会老去，必然
 有生就有死，必然
 
-
 鬼：在心识
 神：在心识
 轮回：
+
+
+
+## python 魔术方法
+### getitem
+可以使用下标的方式获取值，key作为入参给到getitem方法。obj[key] ≡ obj.getitem(key)
+### __call__
+让对象想函数一样使用。本质 `obj(x)` 就是 `obj.__call__(x)`。
+

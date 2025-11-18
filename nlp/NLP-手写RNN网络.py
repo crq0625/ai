@@ -17,7 +17,6 @@ data_iter, vocab = dltools.load_data_time_machine(batch_size, num_steps)
 # feature = torch.arange(10).reshape(2, 5)
 # res = F.one_hot(feature, num_classes=len(vocab))
 
-
 """初始化模型参数"""
 def get_params(vocab_size, num_hiddens,device):
     num_inputs = num_outputs = vocab_size # 输入输出的维度是词表的大小
@@ -55,7 +54,7 @@ def init_rnn_state(batch_size, num_hiddens, device):
     """
     return (torch.zeros((batch_size, num_hiddens), device=device),)
 
-# rnn主题结构
+# rnn主题结构,前向传播函数，返回最终输出值和新的隐藏状态，隐藏状态是个元组，去第一个值
 def rnn(inputs,state,params):
     # inputs 输入数据的形状（时间步数，批次大小，输入维度）
     W_xh, W_hh, b_h, W_o, b_o = params # 取出参数
@@ -84,7 +83,7 @@ class RNNModelScratch:
         self.init_state,self.forward_fn = init_state,forward_fn
 
     def __call__(self, X, state):
-        X = F.one_hot(x.T,self.vocab_size).type(torch.float32) # 输入参数
+        X = F.one_hot(X.T,self.vocab_size).type(torch.float32) # 输入参数
         return self.forward_fn(X,state,self.params)
 
     def begin_state(self,batch_size,device):
@@ -94,7 +93,46 @@ class RNNModelScratch:
 device = dltools.try_gpu()
 number_hiddens = 512
 net = RNNModelScratch(len(vocab), number_hiddens, device, get_params, init_rnn_state, rnn)
-state = net.begin_state(X.shape[0], device)
-Y,new_state = net(X.to(device), state)
-print(Y.shape)
-print(new_state[0].shape)
+
+# X = torch.randint(0,len(vocab),(num_steps,batch_size))
+# state = net.begin_state(X.shape[0], device)
+# Y,new_state = net(X.to(device), state)
+# exit()
+# 预测代码
+def predict(prefix,num_preds,net,vocab,device):
+    """
+    预测prefix后面的num_preds个字符。
+    prefix 是输入前缀字符串。取最后一个字符作为输入。
+    num_preds 是预测输出字符个数。
+    net是RNN模型。
+    vocab是词汇表。
+    device是设备，gpu或者cpu。
+    """
+    state = net.begin_state(batch_size=1,device=device) # 隐藏初始状态初始化。
+    prefix_first_char = prefix[0]
+    prefix_first_char_index = vocab[prefix_first_char]; # 取出第一个字符的索引
+    outputs = [prefix_first_char_index] # 取出第一个字符串。
+    get_input = lambda:torch.tensor([outputs[-1]],device=device).reshape((1,1)) # 定义获取输入字符串方法
+    # 预热
+    for y in prefix[1:]:
+        X = get_input()
+        print('预热-输入字符是',vocab.idx_to_token[X[0][0]])
+        _,state = net(X,state)
+        outputs.append(vocab[y])
+    
+    # 真正的预测
+    for _ in range(num_preds):
+        X = get_input()
+        print('预测-输入字符是',vocab.idx_to_token[X[0][0]])
+        Y,state =net(X,state) # output的最后一个字符
+        outputs.append(Y.argmax(dim=1).reshape(1).item()) # 获取最大值的索引
+    resut = []
+    for i in outputs:
+        temp = vocab.idx_to_token[i]
+        resut.append(temp)
+    return ''.join(resut)
+
+prefix = 'time traveller'
+num_preds = 3
+print(predict(prefix,num_preds,net,vocab,device))
+
