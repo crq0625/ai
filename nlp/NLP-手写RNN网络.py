@@ -14,20 +14,9 @@ batch_size, num_steps = 32, 35
 data_iter, vocab = dltools.load_data_time_machine(batch_size, num_steps)
 # one-hot编码处理的时候会把元素索引变成一个one-hot向量，就是把一个元素扩展成一个一维数组
 # 因此输入一维数组结果会返回二维数组,最后一维变的数量变成词表大小（也就是分类的个数）
-feature = torch.arange(10).reshape(2, 5)
-print(feature)
-print(feature.T)
-res = F.one_hot(feature, num_classes=len(vocab))
-print(res.shape)
-"""
-torch.Size([2, 2])
-torch.Size([2, 2, 28])
-"""
-print('------------------')
-b_h = torch.zeros(2)
-print(b_h.shape)
-print(b_h)
-print('------------------')
+# feature = torch.arange(10).reshape(2, 5)
+# res = F.one_hot(feature, num_classes=len(vocab))
+
 
 """初始化模型参数"""
 def get_params(vocab_size, num_hiddens,device):
@@ -61,9 +50,8 @@ def get_params(vocab_size, num_hiddens,device):
 
 # 初始化隐藏状态,返回的是元组
 def init_rnn_state(batch_size, num_hiddens, device):
-    """初始化隐藏状态
+    """初始化隐藏状态H0
     输出维度是num_hiddens
-
     """
     return (torch.zeros((batch_size, num_hiddens), device=device),)
 
